@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compilar y Ejecutar Qt",
+            "type": "shell",
+            "command": "g++ -fPIC main.cpp -o Quick-PanelPlusPlus $(pkg-config --cflags --libs Qt5Widgets) && ./Quick-PanelPlusPlus",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}
