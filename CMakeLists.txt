@@ -1,33 +1,52 @@
 cmake_minimum_required(VERSION 3.16)
 
+if(WIN32)
+    # Apunta directamente a la carpeta donde está Qt6Config.cmake
+    set(Qt6_DIR "C:/Qt/6.5.3/msvc2019_64/lib/cmake/Qt6")
+endif()
+
 project(QtSimpleApp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Habilitar la generación automática de archivos Meta-Object Compiler (MOC), User Interface (UIC) y Resource (RCC)
+# Generación automática de MOC, UIC y RCC
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Configuración condicional de versiones de Qt según la plataforma
+# Búsqueda condicional de Qt según la plataforma
 if(WIN32)
-    # En Windows requiere exactamente la serie Qt 6.5
-    find_package(Qt6 6.5 EXACT REQUIRED COMPONENTS Widgets)
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.5.3/msvc2019_64")
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
 elseif(UNIX AND NOT APPLE)
-    # En Linux requiere cualquier versión de Qt 6
-    find_package(Qt6 6.0 REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 6.0 REQUIRED COMPONENTS Widgets WebEngineWidgets)
 else()
     message(FATAL_ERROR "Sistema operativo no soportado.")
 endif()
 
-# Definición del ejecutable
-add_executable(${PROJECT_NAME}
-    main.cpp
+# Definición de archivos fuente dentro de la carpeta src/
+set(SOURCES
+    src/main.cpp
+    # Agrega aquí más fuentes: src/mainwindow.cpp, etc.
 )
 
-# Enlace de las bibliotecas de Qt con el ejecutable
-target_link_libraries(${PROJECT_NAME} 
-    PRIVATE 
+# Si usas recursos de Qt (archivos .qrc para empaquetar HTML)
+set(RESOURCES
+    resources.qrc
+)
+
+add_executable(${PROJECT_NAME}
+    ${SOURCES}
+    #${RESOURCES}
+)
+
+# Indicar a CMake que busque encabezados en src/
+target_include_directories(${PROJECT_NAME} PRIVATE src)
+
+# Enlace de librerías
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
         Qt6::Widgets
+        # Qt6::WebEngineWidgets # Descomenta si usas QWebEngineView para renderizar HTML
 )
