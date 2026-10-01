@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QCloseEvent>
+#include <QTimer>
 #include <memory>
 #include "Interfaz/ISystemControl.h"
 
@@ -14,6 +16,7 @@ class CompatWindow : public QMainWindow {
 public:
     explicit CompatWindow(std::shared_ptr<ISystemControl> systemControl, QWidget* parent = nullptr);
     ~CompatWindow() override;
+    void showTemporary(int durationMs = 3000);
 
 private slots:
     void onVolumeSliderChanged(int value);
@@ -25,6 +28,13 @@ private slots:
     void updateVolume(int volume);
 
 private:
+    void positionTopLeft();
     Ui::CompatWindow* ui;
     std::shared_ptr<ISystemControl> m_systemControl;
+    QTimer* m_hideTimer;
+
+protected:
+	void closeEvent(QCloseEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 };

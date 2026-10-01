@@ -17,6 +17,9 @@ public:
     ~MainWindow() override;
 
 private:
+
+    void setupPanelGeometry(QWidget* widget, double widthRatio = 0.90, double heightRatio = 0.05);
+
     Ui::MainWindow* ui;
     std::shared_ptr<ISystemControl> m_systemControl;
     std::unique_ptr<CompatWindow> m_compatWindow;

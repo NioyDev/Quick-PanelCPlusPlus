@@ -1,7 +1,31 @@
 #include "LinuxSystemControl.h"
 #include <QProcess>
 
-LinuxSystemControl::LinuxSystemControl(QObject* parent) : ISystemControl(parent) {}
+LinuxSystemControl::LinuxSystemControl(QObject* parent) : ISystemControl(parent) {
+    setupVolumeEvents();
+}
+
+LinuxSystemControl::~LinuxSystemControl() {
+    if (m_pactlProcess) {
+        m_pactlProcess->kill();
+        m_pactlProcess->deleteLater();
+    }
+}
+
+void LinuxSystemControl::setupVolumeEvents() {
+    m_pactlProcess = new QProcess(this);
+    // Escucha eventos de PulseAudio / PipeWire en tiempo real
+    m_pactlProcess->start("pactl", QStringList() << "subscribe");
+
+    connect(m_pactlProcess, &QProcess::readyReadStandardOutput, this, [this]() {
+        QString output = m_pactlProcess->readAllStandardOutput();
+        // Si el evento reportado corresponde al cambio en un dispositivo de salida ('sink')
+        if (output.contains("Event 'change' on sink")) {
+            int currentVol = getVolume();
+            emit volumeChanged(currentVol);
+        }
+        });
+}
 
 int LinuxSystemControl::getVolume() {
     QProcess process;
