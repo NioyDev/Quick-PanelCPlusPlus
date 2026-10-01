@@ -4,7 +4,10 @@
 #include "Factorys/SystemControlFactory.h"
 
 int main(int argc, char **argv) {
-    std::cout << "hola mundo\n";
+
+
+    
+    std::cout << "Inicio Quick Panel\n";
     QApplication app(argc, argv);
 
     // Crear la instancia adecuada (Windows o Linux) vía Factory

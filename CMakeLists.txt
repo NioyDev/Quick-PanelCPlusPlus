@@ -7,6 +7,7 @@ endif()
 project(QtSimpleApp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
@@ -17,9 +18,9 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 if(WIN32)
     set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64")
-    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets)
 elseif(UNIX AND NOT APPLE)
-    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets)
 else()
     message(FATAL_ERROR "Sistema operativo no soportado.")
 endif()
@@ -29,6 +30,7 @@ set(SOURCES
     src/Factorys/SystemControlFactory.cpp
     src/UI/MainWindow.cpp
     src/UI/CompatWindow.cpp
+    src/utils/DisplayUtils.cpp
     ui/mainwindow.ui
     ui/compatwindow.ui
 )
@@ -38,6 +40,7 @@ set(HEADERS
     src/Factorys/SystemControlFactory.h
     src/UI/MainWindow.h
     src/UI/CompatWindow.h
+    src/utils/DisplayUtils.h
 )
 
 if(WIN32)
