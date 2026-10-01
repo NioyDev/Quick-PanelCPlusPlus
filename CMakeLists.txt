@@ -1,52 +1,96 @@
 cmake_minimum_required(VERSION 3.16)
 
 if(WIN32)
-    # Apunta directamente a la carpeta donde está Qt6Config.cmake
-    set(Qt6_DIR "C:/Qt/6.5.3/msvc2019_64/lib/cmake/Qt6")
+    set(Qt6_DIR "C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6")
 endif()
 
 project(QtSimpleApp LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Generación automática de MOC, UIC y RCC
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Búsqueda condicional de Qt según la plataforma
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
+
 if(WIN32)
-    set(CMAKE_PREFIX_PATH "C:/Qt/6.5.3/msvc2019_64")
-    find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/msvc2022_64")
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
 elseif(UNIX AND NOT APPLE)
-    find_package(Qt6 6.0 REQUIRED COMPONENTS Widgets WebEngineWidgets)
+    find_package(Qt6 6.8 REQUIRED COMPONENTS Widgets)
 else()
     message(FATAL_ERROR "Sistema operativo no soportado.")
 endif()
 
-# Definición de archivos fuente dentro de la carpeta src/
 set(SOURCES
     src/main.cpp
-    # Agrega aquí más fuentes: src/mainwindow.cpp, etc.
+    src/Factorys/SystemControlFactory.cpp
+    src/UI/MainWindow.cpp
+    src/UI/CompatWindow.cpp
+    ui/mainwindow.ui
+    ui/compatwindow.ui
 )
 
-# Si usas recursos de Qt (archivos .qrc para empaquetar HTML)
-set(RESOURCES
-    resources.qrc
+set(HEADERS
+    src/Interfaz/ISystemControl.h
+    src/Factorys/SystemControlFactory.h
+    src/UI/MainWindow.h
+    src/UI/CompatWindow.h
 )
+
+if(WIN32)
+    list(APPEND SOURCES src/utils/WinSystemControl.cpp)
+    list(APPEND HEADERS src/utils/WinSystemControl.h)
+    add_compile_definitions(
+        _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
+        WIN32_LEAN_AND_MEAN
+        NOMINMAX
+    )
+else()
+    list(APPEND SOURCES src/utils/LinuxSystemControl.cpp)
+    list(APPEND HEADERS src/utils/LinuxSystemControl.h)
+endif()
 
 add_executable(${PROJECT_NAME}
     ${SOURCES}
-    #${RESOURCES}
+    ${HEADERS}
 )
 
-# Indicar a CMake que busque encabezados en src/
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /permissive-)
+endif()
 
-# Enlace de librerías
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    src
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Qt6::Widgets
-        # Qt6::WebEngineWidgets # Descomenta si usas QWebEngineView para renderizar HTML
 )
+
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp)
+
+    # 💡 OBTENER RUTA BINARIA DE QT DIRECTAMENTE DESDE Qt6::Core
+    get_target_property(QT_CORE_LIB_PATH Qt6::Core LOCATION)
+    get_filename_component(QT_BIN_DIR "${QT_CORE_LIB_PATH}" DIRECTORY)
+
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+
+    if(WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            # Pasa QT_BIN_DIR en el PATH para que windeployqt pueda cargar Qt6Core.dll
+            COMMAND ${CMAKE_COMMAND} -E env "PATH=${QT_BIN_DIR};$ENV{PATH}"
+                    ${WINDEPLOYQT_EXECUTABLE}
+                    $<$<CONFIG:Debug>:--debug>
+                    $<$<CONFIG:Release>:--release>
+                    --no-compiler-runtime
+                    $<TARGET_FILE:${PROJECT_NAME}>
+            COMMENT "Ejecutando windeployqt automáticamente para copiar DLLs y plugins..."
+        )
+    endif()
+endif()

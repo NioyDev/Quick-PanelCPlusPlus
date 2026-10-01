@@ -3,12 +3,13 @@
   "configurePresets": [
     {
       "name": "windows-x64-qt",
-      "displayName": "Windows x64 (Qt 6.5)",
+      "displayName": "Windows x64 (Qt 6.8)",
       "description": "Configuración de CMake para Windows con MSVC y Qt",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_PREFIX_PATH": "C:/Qt/6.5.3/msvc2019_64"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.8.3/msvc2022_64"
       }
     },
     {
@@ -16,7 +17,10 @@
       "displayName": "Linux x64 (Qt 6)",
       "description": "Configuración para Linux en VS Code",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ]
 }
