@@ -1,10 +1,11 @@
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, QWidget* parent)
+MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::shared_ptr<ISystemKey> systemKey, QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , m_systemControl(std::move(systemControl)) {
+    , m_systemControl(std::move(systemControl))
+    , m_systemKey(std::move(systemKey)) {
     ui->setupUi(this);
 
     // Ventana sin marco y SIEMPRE por encima de las demás aplicaciones
@@ -24,6 +25,7 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, QWidget* p
     this->setupPanelGeometry(this, 0.95, 0.05);
     // Inicializar el módulo emergente de reproducción
     m_compatWindow = std::make_unique<CompatWindow>(m_systemControl, this);
+	m_keySequenceWindow = std::make_unique<KeySequenceWindow>(m_systemKey, this);
 }
 
 MainWindow::~MainWindow() {
