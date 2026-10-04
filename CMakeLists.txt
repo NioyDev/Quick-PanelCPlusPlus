@@ -64,7 +64,7 @@ endif()
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
-)
+ "src/Interfaz/ISystemBattery.h"  "src/utils/LinuxSystemBattery.h" "src/utils/LinuxSystemBattery.cpp" "src/utils/WinSystemBattery.h" "src/utils/WinSystemBattery.cpp" "src/Factorys/SystemBatteryFactory.h" "src/Factorys/SystemBatteryFactory.cpp" "src/UI/QuickBatteryWindow.h" "src/UI/QuickBatteryWindow.cpp")
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     src
@@ -78,12 +78,15 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp)
+    target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp
+    Setupapi
+      PowrProf)
 
     # Obtener ruta binaria de Qt directamente desde Qt6::Core
     get_target_property(QT_CORE_LIB_PATH Qt6::Core LOCATION)
     get_filename_component(QT_BIN_DIR "${QT_CORE_LIB_PATH}" DIRECTORY)
     find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
+    
     
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
