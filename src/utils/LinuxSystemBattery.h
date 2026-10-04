@@ -6,9 +6,9 @@
 #include <optional>
 
 // Lee /sys/class/power_supply y usa powerprofilesctl (power-profiles-daemon).
-class ControlBatteryLinux : public IControlBattery {
+class LinuxSystemBattery : public ISystemBattery {
 public:
-    ControlBatteryLinux();
+    LinuxSystemBattery();
 
     BatteryInfo readBattery() override;
     QList<PowerProfile> availableProfiles() override;

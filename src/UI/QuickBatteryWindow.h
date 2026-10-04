@@ -12,7 +12,7 @@ class QuickBatteryWindow : public QWidget {
     Q_OBJECT
 
 public:
-    explicit QuickBatteryWindow(std::shared_ptr<IControlBattery> battery, QWidget* parent = nullptr);
+    explicit QuickBatteryWindow(std::shared_ptr<ISystemBattery> battery, QWidget* parent = nullptr);
     ~QuickBatteryWindow() override;
 
 signals:
@@ -36,6 +36,6 @@ private:
     void updateProfileButtons(PowerProfile currentProfile);
 
     std::unique_ptr<Ui::QuickBatteryWindow> m_ui;
-    std::shared_ptr<IControlBattery> m_battery;
+    std::shared_ptr<ISystemBattery> m_battery;
     QTimer* m_timer = nullptr;
 };

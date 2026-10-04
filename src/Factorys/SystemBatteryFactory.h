@@ -10,9 +10,9 @@ class QuickBatteryWindow;
 
 class ControlBatteryFactory {
 public:
-    static std::shared_ptr<IControlBattery> create() {
+    static std::shared_ptr<ISystemBattery> create() {
 #ifdef _WIN32
-        return std::make_shared<ControlBatteryWindows>();
+        return std::make_shared<WinSystemBattery>();
 #else
         return std::make_shared<ControlBatteryLinux>();
 #endif

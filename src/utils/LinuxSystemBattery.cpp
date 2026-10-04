@@ -21,11 +21,11 @@ namespace {
     }
 } // namespace
 
-ControlBatteryLinux::ControlBatteryLinux()
+LinuxSystemBattery::LinuxSystemBattery()
     : m_batteryPath(findBatteryPath())
 {}
 
-QString ControlBatteryLinux::findBatteryPath()
+QString LinuxSystemBattery::findBatteryPath()
 {
     const QDir root(QStringLiteral("/sys/class/power_supply"));
     const QStringList entries = root.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
@@ -43,7 +43,7 @@ QString ControlBatteryLinux::findBatteryPath()
     return {};
 }
 
-std::optional<QString> ControlBatteryLinux::readText(const QString& node) const
+std::optional<QString> LinuxSystemBattery::readText(const QString& node) const
 {
     if (m_batteryPath.isEmpty())
         return std::nullopt;
@@ -53,7 +53,7 @@ std::optional<QString> ControlBatteryLinux::readText(const QString& node) const
     return QString::fromUtf8(f.readAll()).trimmed();
 }
 
-std::optional<double> ControlBatteryLinux::readNumber(const QString& node) const
+std::optional<double> LinuxSystemBattery::readNumber(const QString& node) const
 {
     const auto text = readText(node);
     if (!text)
@@ -63,7 +63,7 @@ std::optional<double> ControlBatteryLinux::readNumber(const QString& node) const
     return ok ? std::optional<double>(v) : std::nullopt;
 }
 
-BatteryInfo ControlBatteryLinux::readBattery()
+BatteryInfo LinuxSystemBattery::readBattery()
 {
     BatteryInfo info;
     const auto capacity = readNumber(QStringLiteral("capacity"));
@@ -117,7 +117,7 @@ BatteryInfo ControlBatteryLinux::readBattery()
     return info;
 }
 
-std::optional<QString> ControlBatteryLinux::runPowerProfiles(const QStringList& args)
+std::optional<QString> LinuxSystemBattery::runPowerProfiles(const QStringList& args)
 {
     QProcess p;
     p.start(QStringLiteral("powerprofilesctl"), args);
@@ -128,7 +128,7 @@ std::optional<QString> ControlBatteryLinux::runPowerProfiles(const QStringList& 
     return QString::fromUtf8(p.readAllStandardOutput()).trimmed();
 }
 
-QList<PowerProfile> ControlBatteryLinux::availableProfiles()
+QList<PowerProfile> LinuxSystemBattery::availableProfiles()
 {
     const auto out = runPowerProfiles({ QStringLiteral("list") });
     QList<PowerProfile> result;
@@ -141,7 +141,7 @@ QList<PowerProfile> ControlBatteryLinux::availableProfiles()
     return result;
 }
 
-std::optional<PowerProfile> ControlBatteryLinux::currentProfile()
+std::optional<PowerProfile> LinuxSystemBattery::currentProfile()
 {
     const auto out = runPowerProfiles({ QStringLiteral("get") });
     if (!out)
@@ -153,7 +153,7 @@ std::optional<PowerProfile> ControlBatteryLinux::currentProfile()
     return std::nullopt;
 }
 
-bool ControlBatteryLinux::setProfile(PowerProfile profile)
+bool LinuxSystemBattery::setProfile(PowerProfile profile)
 {
     return runPowerProfiles({ QStringLiteral("set"), profileId(profile) }).has_value();
 }

@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(std::shared_ptr<ISystemControl> systemControl,
-        std::shared_ptr<ISystemKey> systemKey, std::shared_ptr<IControlBattery> systemBattery,
+        std::shared_ptr<ISystemKey> systemKey, std::shared_ptr<ISystemBattery> systemBattery,
         QWidget* parent = nullptr);
     ~MainWindow() override;
 
@@ -34,10 +34,10 @@ private:
     Ui::MainWindow* ui;
     std::shared_ptr<ISystemControl> m_systemControl;
     std::shared_ptr<ISystemKey> m_systemKey;
-    std::shared_ptr<IControlBattery> m_systemBattery;
+    std::shared_ptr<ISystemBattery> m_systemBattery;
     std::unique_ptr<CompatWindow> m_compatWindow;
     std::unique_ptr<KeySequenceWindow> m_keySequenceWindow;
-    std::unique_ptr<QuickBatteryWindow> m_keyQuickBatteryWindow;
+    std::unique_ptr<QuickBatteryWindow> m_QuickBatteryWindow;
     QTimer* m_batteryTimer = nullptr;
     QTimer* m_batteryHideTimer = nullptr;
 };

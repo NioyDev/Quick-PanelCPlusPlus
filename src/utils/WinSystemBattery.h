@@ -7,9 +7,9 @@
 // Usa GetSystemPowerStatus + IOCTL de la clase Battery (SetupAPI) para
 // salud/consumo/temperatura, y los "overlay schemes" de powrprof.dll
 // para el perfil de rendimiento.
-class ControlBatteryWindows : public IControlBattery {
+class WinSystemBattery : public ISystemBattery {
 public:
-    ControlBatteryWindows();
+    WinSystemBattery();
 
     BatteryInfo readBattery() override;
     QList<PowerProfile> availableProfiles() override;

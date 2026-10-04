@@ -11,7 +11,7 @@ namespace {
     constexpr int kRefreshIntervalMs = 5000;
 }
 
-QuickBatteryWindow::QuickBatteryWindow(std::shared_ptr<IControlBattery> battery, QWidget* parent)
+QuickBatteryWindow::QuickBatteryWindow(std::shared_ptr<ISystemBattery> battery, QWidget* parent)
     : QWidget(parent)
     , m_ui(std::make_unique<Ui::QuickBatteryWindow>())
     , m_battery(std::move(battery))

@@ -116,7 +116,7 @@ namespace {
 
 } // namespace
 
-ControlBatteryWindows::ControlBatteryWindows()
+WinSystemBattery::WinSystemBattery()
     : m_powrprof(QStringLiteral("powrprof"))
 {
     if (m_powrprof.load()) {
@@ -125,7 +125,7 @@ ControlBatteryWindows::ControlBatteryWindows()
     }
 }
 
-BatteryInfo ControlBatteryWindows::readBattery()
+BatteryInfo WinSystemBattery::readBattery()
 {
     BatteryInfo info;
 
@@ -183,14 +183,14 @@ BatteryInfo ControlBatteryWindows::readBattery()
     return info;
 }
 
-QList<PowerProfile> ControlBatteryWindows::availableProfiles()
+QList<PowerProfile> WinSystemBattery::availableProfiles()
 {
     if (!m_getOverlay || !m_setOverlay)
         return {};
     return { PowerProfile::PowerSaver, PowerProfile::Balanced, PowerProfile::Performance };
 }
 
-std::optional<PowerProfile> ControlBatteryWindows::currentProfile()
+std::optional<PowerProfile> WinSystemBattery::currentProfile()
 {
     if (!m_getOverlay)
         return std::nullopt;
@@ -204,7 +204,7 @@ std::optional<PowerProfile> ControlBatteryWindows::currentProfile()
     return std::nullopt;
 }
 
-bool ControlBatteryWindows::setProfile(PowerProfile profile)
+bool WinSystemBattery::setProfile(PowerProfile profile)
 {
     return m_setOverlay && m_setOverlay(overlayFor(profile)) == 0;
 }

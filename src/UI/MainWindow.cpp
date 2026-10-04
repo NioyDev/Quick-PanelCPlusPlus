@@ -3,7 +3,7 @@
 #include <QScreen>
 
 MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::shared_ptr<ISystemKey> systemKey,
-    std::shared_ptr<IControlBattery> systemBattery,
+    std::shared_ptr<ISystemBattery> systemBattery,
     QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -22,7 +22,7 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
 
     m_compatWindow = std::make_unique<CompatWindow>(m_systemControl, this);
     m_keySequenceWindow = std::make_unique<KeySequenceWindow>(m_systemKey, this);
-    m_keyQuickBatteryWindow = std::make_unique<QuickBatteryWindow>(m_systemBattery, this);
+    m_QuickBatteryWindow = std::make_unique<QuickBatteryWindow>(m_systemBattery, this);
 
     // Abrir/cerrar ventana emergente al hacer clic en el botón de batería
     connect(ui->btnBattery, &QPushButton::clicked, this, &MainWindow::onBatteryClicked);
@@ -31,18 +31,18 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
     m_batteryHideTimer = new QTimer(this);
     m_batteryHideTimer->setSingleShot(true);
     connect(m_batteryHideTimer, &QTimer::timeout, this, [this]() {
-        if (m_keyQuickBatteryWindow) {
-            m_keyQuickBatteryWindow->hide();
+        if (m_QuickBatteryWindow) {
+            m_QuickBatteryWindow->hide();
         }
         });
 
     // Cancelar cuenta regresiva si el cursor entra a QuickBatteryWindow
-    connect(m_keyQuickBatteryWindow.get(), &QuickBatteryWindow::mouseEnteredWindow, this, [this]() {
+    connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseEnteredWindow, this, [this]() {
         m_batteryHideTimer->stop();
         });
 
     // Iniciar cuenta regresiva al salir el cursor de QuickBatteryWindow
-    connect(m_keyQuickBatteryWindow.get(), &QuickBatteryWindow::mouseLeftWindow, this, [this]() {
+    connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseLeftWindow, this, [this]() {
         m_batteryHideTimer->start(1000);
         });
 
@@ -60,23 +60,23 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::onBatteryClicked() {
-    if (!m_keyQuickBatteryWindow) return;
+    if (!m_QuickBatteryWindow) return;
 
-    if (m_keyQuickBatteryWindow->isVisible()) {
-        m_keyQuickBatteryWindow->hide();
+    if (m_QuickBatteryWindow->isVisible()) {
+        m_QuickBatteryWindow->hide();
     }
     else {
         updateBatteryWindowPosition();
-        m_keyQuickBatteryWindow->show();
+        m_QuickBatteryWindow->show();
         // Tiempo inicial de tolerancia para deslizar el ratón hacia la ventana
         m_batteryHideTimer->start(2000);
     }
 }
 
 void MainWindow::updateBatteryWindowPosition() {
-    if (!m_keyQuickBatteryWindow || !ui->btnBattery) return;
+    if (!m_QuickBatteryWindow || !ui->btnBattery) return;
 
-    m_keyQuickBatteryWindow->adjustSize();
+    m_QuickBatteryWindow->adjustSize();
 
     // Obtener la posición global del botón de la batería
     QPoint globalBtnPos = ui->btnBattery->mapToGlobal(QPoint(0, 0));
@@ -85,12 +85,12 @@ void MainWindow::updateBatteryWindowPosition() {
     int btnCenterX = globalBtnPos.x() + (ui->btnBattery->width() / 2);
 
     // Centrar la ventana respecto al centro del botón en X
-    int posX = btnCenterX - (m_keyQuickBatteryWindow->width() / 2);
+    int posX = btnCenterX - (m_QuickBatteryWindow->width() / 2);
 
     // Posición Y fija justo encima del botón
-    int posY = globalBtnPos.y() - m_keyQuickBatteryWindow->height() - 8;
+    int posY = globalBtnPos.y() - m_QuickBatteryWindow->height() - 8;
 
-    m_keyQuickBatteryWindow->move(posX, posY);
+    m_QuickBatteryWindow->move(posX, posY);
 }
 
 void MainWindow::updateBatteryStatus() {

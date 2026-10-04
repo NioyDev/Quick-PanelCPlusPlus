@@ -19,10 +19,10 @@ struct BatteryInfo {
 // Contrato que implementan ControlBatteryLinux y ControlBatteryWindows.
 // No hereda de QObject porque no emite señales; si luego se quiere
 // reaccionar a eventos del sistema, basta con heredar de QObject aquí.
-class IControlBattery {
+class ISystemBattery {
 public:
-    explicit IControlBattery() {};
-    virtual ~IControlBattery() = default;
+    explicit ISystemBattery() {};
+    virtual ~ISystemBattery() = default;
 
     virtual BatteryInfo readBattery() = 0;
     virtual QList<PowerProfile> availableProfiles() = 0;
