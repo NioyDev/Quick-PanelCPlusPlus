@@ -4,9 +4,9 @@
 #include <memory>
 
 #ifdef _WIN32
-#include "utils/WinSystemKey.h"
+#include "Utils&Widgets/SystemKey/WinSystemKey.h"
 #else
-#include "utils/LinuxSystemKey.h"
+#include "Utils&Widgets/SystemKey/LinuxSystemKey.h"
 #endif
 
 class SystemKeyFactory {

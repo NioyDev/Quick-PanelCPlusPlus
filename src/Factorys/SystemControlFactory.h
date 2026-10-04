@@ -4,9 +4,9 @@
 #include <memory>
 
 #ifdef _WIN32
-#include "utils/WinSystemControl.h"
+#include "Utils&Widgets/SystemControl/WinSystemControl.h"
 #else
-#include "utils/LinuxSystemControl.h"
+#include "Utils&Widgets/SystemControl/LinuxSystemControl.h"
 #endif
 
 class SystemControlFactory {

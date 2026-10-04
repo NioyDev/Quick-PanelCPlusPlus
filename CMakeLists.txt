@@ -45,26 +45,30 @@ set(HEADERS
 )
 
 if(WIN32)
-    list(APPEND SOURCES src/utils/WinSystemControl.cpp)
-    list(APPEND HEADERS src/utils/WinSystemControl.h)
-    list(APPEND HEADERS src/utils/WinSystemKey.h)
-    list(APPEND SOURCES src/utils/WinSystemKey.cpp)
+    list(APPEND SOURCES src/Utils&Widgets/SystemControl/WinSystemControl.cpp)
+    list(APPEND HEADERS src/Utils&Widgets/SystemControl/WinSystemControl.h)
+    list(APPEND HEADERS src/Utils&Widgets/SystemKey/WinSystemKey.h)
+    list(APPEND SOURCES src/Utils&Widgets/SystemKey/WinSystemKey.cpp)
+    list(APPEND HEADERS src/Utils&Widgets/SystemBattery/WinSystemBattery.h)
+    list(APPEND SOURCES src/Utils&Widgets/SystemBattery/WinSystemBattery.cpp)
     add_compile_definitions(
         _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         WIN32_LEAN_AND_MEAN
         NOMINMAX
     )
 else()
-    list(APPEND SOURCES src/utils/LinuxSystemControl.cpp)
-    list(APPEND HEADERS src/utils/LinuxSystemControl.h)
-    list(APPEND HEADERS src/utils/LinuxSystemKey.h)
-    list(APPEND SOURCES src/utils/LinuxSystemKey.cpp)
+    list(APPEND SOURCES src/Utils&Widgets/SystemControl/LinuxSystemControl.cpp)
+    list(APPEND HEADERS src/Utils&Widgets/SystemControl/LinuxSystemControl.h)
+    list(APPEND HEADERS src/Utils&Widgets/SystemKey/LinuxSystemKey.h)
+    list(APPEND SOURCES src/Utils&Widgets/SystemKey/LinuxSystemKey.cpp)
+    list(APPEND HEADERS src/Utils&Widgets/SystemBattery/LinuxSystemBattery.h)
+    list(APPEND SOURCES src/Utils&Widgets/SystemBattery/LinuxSystemBattery.cpp)
 endif()
 
 add_executable(${PROJECT_NAME}
     ${SOURCES}
-    ${HEADERS}
- "src/Interfaz/ISystemBattery.h"  "src/utils/LinuxSystemBattery.h" "src/utils/LinuxSystemBattery.cpp" "src/utils/WinSystemBattery.h" "src/utils/WinSystemBattery.cpp" "src/Factorys/SystemBatteryFactory.h" "src/Factorys/SystemBatteryFactory.cpp" "src/UI/QuickBatteryWindow.h" "src/UI/QuickBatteryWindow.cpp")
+    ${HEADERS})
+ #"src/Interfaz/ISystemBattery.h"  "src/utils/SystemBattery/LinuxSystemBattery.h" "src/utils/LinuxSystemBattery.cpp" "src/utils/WinSystemBattery.h" "src/utils/WinSystemBattery.cpp" "src/Factorys/SystemBatteryFactory.h" "src/Factorys/SystemBatteryFactory.cpp" "src/UI/QuickBatteryWindow.h" "src/UI/QuickBatteryWindow.cpp")
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     src
