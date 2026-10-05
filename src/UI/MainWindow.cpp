@@ -1,18 +1,22 @@
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
 #include <QScreen>
+#include <QGuiApplication>
 
 MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::shared_ptr<ISystemKey> systemKey,
-	std::shared_ptr<ISystemBattery> systemBattery, std::shared_ptr<ISystemBluetoothControl> systemBluetooth,
-	std::shared_ptr<ISystemDisplayBrightness> systemDisplayBrightness,
+    std::shared_ptr<ISystemBattery> systemBattery, std::shared_ptr<ISystemBluetoothControl> systemBluetooth,
+    std::shared_ptr<ISystemDisplayBrightness> systemDisplayBrightness,
+    std::shared_ptr<ISystemDateTimeSettingsLauncher> systemDateTimeSettings,
     QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_systemControl(std::move(systemControl))
     , m_systemKey(std::move(systemKey))
-    , m_systemBattery(std::move(systemBattery)) 
+    , m_systemBattery(std::move(systemBattery))
     , m_systemBluetooth(std::move(systemBluetooth))
-    , m_systemDisplayBrightness(std::move(systemDisplayBrightness)) {
+    , m_systemDisplayBrightness(std::move(systemDisplayBrightness))
+    , m_systemDateTimeSettings(std::move(systemDateTimeSettings))
+{
     ui->setupUi(this);
 
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -28,13 +32,15 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
     m_QuickBatteryWindow = std::make_unique<QuickBatteryWindow>(m_systemBattery, this);
     m_QuickBluetoothWindow = std::make_unique<QuickBluetoothWindow>(m_systemBluetooth, this);
     m_QuickBrightnessWindow = std::make_unique<QuickBrightnessWindow>(m_systemDisplayBrightness, this);
+    m_ClockCalendarPopupWindow = std::make_unique<ClockCalendarPopupWindow>(m_systemDateTimeSettings, this);
 
-    // Abrir/cerrar ventana emergente al hacer clic en el botón de batería
+    // Conexiones de botones a slots
     connect(ui->btnBattery, &QPushButton::clicked, this, &MainWindow::onBatteryClicked);
     connect(ui->btnBluetooth, &QPushButton::clicked, this, &MainWindow::onBluetoothClicked);
     connect(ui->btnBrightness, &QPushButton::clicked, this, &MainWindow::onBrightnessClicked);
+    connect(ui->btnClock, &QPushButton::clicked, this, &MainWindow::onClockClicked);
 
-    // Timer de 1 segundo para ocultar QuickBatteryWindow cuando el cursor sale de ella
+    // Timer de ocultación de batería
     m_batteryHideTimer = new QTimer(this);
     m_batteryHideTimer->setSingleShot(true);
     connect(m_batteryHideTimer, &QTimer::timeout, this, [this]() {
@@ -43,28 +49,76 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
         }
         });
 
-    // Cancelar cuenta regresiva si el cursor entra a QuickBatteryWindow
-    /*connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseEnteredWindow, this, [this]() {
-        m_batteryHideTimer->stop();
-        });*/
-
-    // Iniciar cuenta regresiva al salir el cursor de QuickBatteryWindow
-    /*connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseLeftWindow, this, [this]() {
-        m_batteryHideTimer->start(1000);
-        });*/
-
     // Timer de actualización de la batería
     m_batteryTimer = new QTimer(this);
     connect(m_batteryTimer, &QTimer::timeout, this, &MainWindow::updateBatteryStatus);
     m_batteryTimer->start(5000);
 
+    // Timer de actualización de reloj del botón (cada 1s para precisión inmediata)
+    m_clockTimer = new QTimer(this);
+    connect(m_clockTimer, &QTimer::timeout, this, &MainWindow::updateClockButton);
+    m_clockTimer->start(1000);
+
     updateBatteryStatus();
+    updateClockButton();
     updateBatteryWindowPosition();
     updateBrightnessWindowPosition();
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::updateClockButton() {
+    if (!ui->btnClock) return;
+
+    const QString timeStr = ClockCalendarPopupWindow::getFormattedTime12h(/*includeSeconds=*/false);
+    const QString dateStr = ClockCalendarPopupWindow::getFormattedDate();
+
+    ui->btnClock->setText(QString("%1\n%2").arg(timeStr, dateStr));
+}
+
+void MainWindow::onClockClicked() {
+    if (!m_ClockCalendarPopupWindow) return;
+
+    if (m_ClockCalendarPopupWindow->isVisible()) {
+        m_ClockCalendarPopupWindow->hide();
+    }
+    else {
+        updateClockWindowPosition();
+        m_ClockCalendarPopupWindow->show();
+        m_ClockCalendarPopupWindow->activateWindow();
+    }
+}
+
+void MainWindow::updateClockWindowPosition() {
+    if (!m_ClockCalendarPopupWindow || !ui->btnClock) return;
+
+    m_ClockCalendarPopupWindow->adjustSize();
+
+    // 1. Calcular posX (centrado con respecto al botón de reloj)
+    QPoint globalBtnPos = ui->btnClock->mapToGlobal(QPoint(0, 0));
+    int btnCenterX = globalBtnPos.x() + (ui->btnClock->width() / 2);
+    int posX = btnCenterX - (m_ClockCalendarPopupWindow->width() / 2);
+
+    // 2. Calcular posY (pegado exactamente al borde superior del panel)
+    QPoint globalPanelPos = this->mapToGlobal(QPoint(0, 0));
+    int posY = globalPanelPos.y() - m_ClockCalendarPopupWindow->height();
+
+    // 3. Asegurar que la ventana no se corte en los bordes de la pantalla
+    QScreen* screen = this->screen();
+    if (!screen) screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        QRect screenGeo = screen->availableGeometry();
+        if (posX + m_ClockCalendarPopupWindow->width() > screenGeo.right()) {
+            posX = screenGeo.right() - m_ClockCalendarPopupWindow->width();
+        }
+        if (posX < screenGeo.left()) {
+            posX = screenGeo.left();
+        }
+    }
+
+    m_ClockCalendarPopupWindow->move(posX, posY);
 }
 
 void MainWindow::onBluetoothClicked() {
@@ -80,8 +134,7 @@ void MainWindow::onBluetoothClicked() {
     }
 }
 
-void MainWindow::onBrightnessClicked()
-{
+void MainWindow::onBrightnessClicked() {
     if (!m_QuickBrightnessWindow) return;
 
     if (m_QuickBrightnessWindow->isVisible()) {
@@ -116,7 +169,7 @@ void MainWindow::onBatteryClicked() {
     else {
         updateBatteryWindowPosition();
         m_QuickBatteryWindow->show();
-        m_QuickBatteryWindow->activateWindow(); 
+        m_QuickBatteryWindow->activateWindow();
     }
 }
 
@@ -125,37 +178,22 @@ void MainWindow::updateBatteryWindowPosition() {
 
     m_QuickBatteryWindow->adjustSize();
 
-    // Obtener la posición global del botón de la batería
     QPoint globalBtnPos = ui->btnBattery->mapToGlobal(QPoint(0, 0));
-
-    // Centro X del botón
     int btnCenterX = globalBtnPos.x() + (ui->btnBattery->width() / 2);
-
-    // Centrar la ventana respecto al centro del botón en X
     int posX = btnCenterX - (m_QuickBatteryWindow->width() / 2);
-
-    // Posición Y fija justo encima del botón
     int posY = globalBtnPos.y() - m_QuickBatteryWindow->height() - 8;
 
     m_QuickBatteryWindow->move(posX, posY);
 }
 
-void MainWindow::updateBrightnessWindowPosition()
-{
+void MainWindow::updateBrightnessWindowPosition() {
     if (!m_QuickBrightnessWindow || !ui->btnBrightness) return;
 
     m_QuickBrightnessWindow->adjustSize();
 
-    // Obtener la posición global del botón de brillo
     QPoint globalBtnPos = ui->btnBrightness->mapToGlobal(QPoint(0, 0));
-
-    // Centro X del botón
     int btnCenterX = globalBtnPos.x() + (ui->btnBrightness->width() / 2);
-
-    // Centrar la ventana respecto al centro del botón en X
     int posX = btnCenterX - (m_QuickBrightnessWindow->width() / 2);
-
-    // Posición Y fija justo encima del botón
     int posY = globalBtnPos.y() - m_QuickBrightnessWindow->height() - 8;
 
     m_QuickBrightnessWindow->move(posX, posY);

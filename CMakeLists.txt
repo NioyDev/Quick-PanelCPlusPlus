@@ -33,12 +33,14 @@ set(SOURCES
     src/UI/QuickBatteryWindow.cpp
     src/UI/QuickBluetoothWindow.cpp
     src/UI/QuickBrightnessWindow.cpp
+    src/UI/ClockCalendarPopupWindow.cpp
     ui/mainwindow.ui
     ui/compatwindow.ui
     ui/keysequencewindow.ui
     ui/quickbatterywindow.ui
     ui/quickbluetoothwindow.ui
     ui/quickbrightnesswindow.ui
+    ui/clockcalendarpopupwindow.ui
 )
 
 set(HEADERS
@@ -52,6 +54,7 @@ set(HEADERS
     src/UI/QuickBatteryWindow.h
     src/UI/QuickBluetoothWindow.h
     src/UI/QuickBrightnessWindow.h
+    src/UI/ClockCalendarPopupWindow.h
 )
 
 if(WIN32)
@@ -65,6 +68,8 @@ if(WIN32)
     list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/WinSystemBluetoothControl.cpp)
     list(APPEND HEADERS src/UtilsWidgets/SystemDisplayBrightness/WinSystemDisplayBrightness.h)
     list(APPEND SOURCES src/UtilsWidgets/SystemDisplayBrightness/WinSystemDisplayBrightness.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemDateTime/WinSystemDateTimeSettingsLauncher.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemDateTime/WinSystemDateTimeSettingsLauncher.cpp)
     add_compile_definitions(
         _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         WIN32_LEAN_AND_MEAN
@@ -81,6 +86,8 @@ else()
     list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/LinuxSystemBluetoothControl.cpp)
     list(APPEND HEADERS src/UtilsWidgets/SystemDisplayBrightness/LinuxSystemDisplayBrightnessFactory.h)
     list(APPEND SOURCES src/UtilsWidgets/SystemDisplayBrightness/LinuxSystemDisplayBrightnessFactory.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemDateTime/LinuxSystemDateTimeSettingsLauncher.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemDateTime/LinuxSystemDateTimeSettingsLauncher.cpp)
 endif()
 
 add_executable(${PROJECT_NAME}
