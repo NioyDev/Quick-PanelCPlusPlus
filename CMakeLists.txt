@@ -32,22 +32,26 @@ set(SOURCES
     src/UI/KeySequenceWindow.cpp
     src/UI/QuickBatteryWindow.cpp
     src/UI/QuickBluetoothWindow.cpp
+    src/UI/QuickBrightnessWindow.cpp
     ui/mainwindow.ui
     ui/compatwindow.ui
     ui/keysequencewindow.ui
     ui/quickbatterywindow.ui
     ui/quickbluetoothwindow.ui
+    ui/quickbrightnesswindow.ui
 )
 
 set(HEADERS
     src/Interfaz/ISystemControl.h
     src/Interfaz/ISystemKey.h
     src/Factorys/SystemControlFactory.h
+    src/Factorys/SystemDisplayBrightnessFactory.h
     src/UI/MainWindow.h
     src/UI/CompatWindow.h
     src/UI/KeySequenceWindow.h
     src/UI/QuickBatteryWindow.h
     src/UI/QuickBluetoothWindow.h
+    src/UI/QuickBrightnessWindow.h
 )
 
 if(WIN32)
@@ -59,6 +63,8 @@ if(WIN32)
     list(APPEND SOURCES src/UtilsWidgets/SystemBattery/WinSystemBattery.cpp)
     list(APPEND HEADERS src/UtilsWidgets/SystemBluetooth/WinSystemBluetoothControl.h)
     list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/WinSystemBluetoothControl.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemDisplayBrightness/WinSystemDisplayBrightness.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemDisplayBrightness/WinSystemDisplayBrightness.cpp)
     add_compile_definitions(
         _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         WIN32_LEAN_AND_MEAN
@@ -73,6 +79,8 @@ else()
     list(APPEND SOURCES src/UtilsWidgets/SystemBattery/LinuxSystemBattery.cpp)
     list(APPEND HEADERS src/UtilsWidgets/SystemBluetooth/LinuxSystemBluetoothControl.h)
     list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/LinuxSystemBluetoothControl.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemDisplayBrightness/LinuxSystemDisplayBrightnessFactory.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemDisplayBrightness/LinuxSystemDisplayBrightnessFactory.cpp)
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -95,7 +103,12 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp
     Setupapi
     PowrProf
-    Bthprops)
+    Bthprops
+    Dxva2
+    ole32
+    oleaut32
+    wbemuuid
+    )
 
     # Obtener ruta binaria de Qt directamente desde Qt6::Core
     get_target_property(QT_CORE_LIB_PATH Qt6::Core LOCATION)

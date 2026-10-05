@@ -4,13 +4,15 @@
 
 MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::shared_ptr<ISystemKey> systemKey,
 	std::shared_ptr<ISystemBattery> systemBattery, std::shared_ptr<ISystemBluetoothControl> systemBluetooth,
+	std::shared_ptr<ISystemDisplayBrightness> systemDisplayBrightness,
     QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_systemControl(std::move(systemControl))
     , m_systemKey(std::move(systemKey))
     , m_systemBattery(std::move(systemBattery)) 
-    , m_systemBluetooth(std::move(systemBluetooth)) {
+    , m_systemBluetooth(std::move(systemBluetooth))
+    , m_systemDisplayBrightness(std::move(systemDisplayBrightness)) {
     ui->setupUi(this);
 
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -25,10 +27,12 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
     m_keySequenceWindow = std::make_unique<KeySequenceWindow>(m_systemKey, this);
     m_QuickBatteryWindow = std::make_unique<QuickBatteryWindow>(m_systemBattery, this);
     m_QuickBluetoothWindow = std::make_unique<QuickBluetoothWindow>(m_systemBluetooth, this);
+    m_QuickBrightnessWindow = std::make_unique<QuickBrightnessWindow>(m_systemDisplayBrightness, this);
 
     // Abrir/cerrar ventana emergente al hacer clic en el botón de batería
     connect(ui->btnBattery, &QPushButton::clicked, this, &MainWindow::onBatteryClicked);
     connect(ui->btnBluetooth, &QPushButton::clicked, this, &MainWindow::onBluetoothClicked);
+    connect(ui->btnBrightness, &QPushButton::clicked, this, &MainWindow::onBrightnessClicked);
 
     // Timer de 1 segundo para ocultar QuickBatteryWindow cuando el cursor sale de ella
     m_batteryHideTimer = new QTimer(this);
@@ -56,6 +60,7 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
 
     updateBatteryStatus();
     updateBatteryWindowPosition();
+    updateBrightnessWindowPosition();
 }
 
 MainWindow::~MainWindow() {
@@ -72,6 +77,20 @@ void MainWindow::onBluetoothClicked() {
         updateBluetoothWindowPosition();
         m_QuickBluetoothWindow->show();
         m_QuickBluetoothWindow->activateWindow();
+    }
+}
+
+void MainWindow::onBrightnessClicked()
+{
+    if (!m_QuickBrightnessWindow) return;
+
+    if (m_QuickBrightnessWindow->isVisible()) {
+        m_QuickBrightnessWindow->hide();
+    }
+    else {
+        updateBrightnessWindowPosition();
+        m_QuickBrightnessWindow->show();
+        m_QuickBrightnessWindow->activateWindow();
     }
 }
 
@@ -119,6 +138,27 @@ void MainWindow::updateBatteryWindowPosition() {
     int posY = globalBtnPos.y() - m_QuickBatteryWindow->height() - 8;
 
     m_QuickBatteryWindow->move(posX, posY);
+}
+
+void MainWindow::updateBrightnessWindowPosition()
+{
+    if (!m_QuickBrightnessWindow || !ui->btnBrightness) return;
+
+    m_QuickBrightnessWindow->adjustSize();
+
+    // Obtener la posición global del botón de brillo
+    QPoint globalBtnPos = ui->btnBrightness->mapToGlobal(QPoint(0, 0));
+
+    // Centro X del botón
+    int btnCenterX = globalBtnPos.x() + (ui->btnBrightness->width() / 2);
+
+    // Centrar la ventana respecto al centro del botón en X
+    int posX = btnCenterX - (m_QuickBrightnessWindow->width() / 2);
+
+    // Posición Y fija justo encima del botón
+    int posY = globalBtnPos.y() - m_QuickBrightnessWindow->height() - 8;
+
+    m_QuickBrightnessWindow->move(posX, posY);
 }
 
 void MainWindow::updateBatteryStatus() {
