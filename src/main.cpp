@@ -4,6 +4,7 @@
 #include "Factorys/SystemControlFactory.h"
 #include "Factorys/SystemKeyFactory.h"
 #include "Factorys/SystemBatteryFactory.h"
+#include "Factorys/SystemBluetoothControlFactory.h"
 
 int main(int argc, char **argv) {
 
@@ -16,9 +17,10 @@ int main(int argc, char **argv) {
     auto systemControl = SystemControlFactory::create();
     auto systemKey = SystemKeyFactory::create();
     auto systemBattery = ControlBatteryFactory::create();
+    auto systemBluetooth = SystemBluetoothControlFactory::create();
 
     // Inyectar el servicio al MainWindow
-    MainWindow w(systemControl, systemKey, systemBattery);
+    MainWindow w(systemControl, systemKey, systemBattery, systemBluetooth);
     w.show();
 
     return app.exec();

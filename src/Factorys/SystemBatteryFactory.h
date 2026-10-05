@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Interfaz/ISystemBattery.h"
-#include "Utils&Widgets/SystemBattery/LinuxSystemBattery.h"
-#include "Utils&Widgets/SystemBattery/WinSystembattery.h"
+#include "UtilsWidgets/SystemBattery/LinuxSystemBattery.h"
+#include "UtilsWidgets/SystemBattery/WinSystembattery.h"
 
 #include <memory>
 

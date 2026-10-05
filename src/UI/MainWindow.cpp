@@ -3,13 +3,14 @@
 #include <QScreen>
 
 MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::shared_ptr<ISystemKey> systemKey,
-    std::shared_ptr<ISystemBattery> systemBattery,
+	std::shared_ptr<ISystemBattery> systemBattery, std::shared_ptr<ISystemBluetoothControl> systemBluetooth,
     QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_systemControl(std::move(systemControl))
     , m_systemKey(std::move(systemKey))
-    , m_systemBattery(std::move(systemBattery)) {
+    , m_systemBattery(std::move(systemBattery)) 
+    , m_systemBluetooth(std::move(systemBluetooth)) {
     ui->setupUi(this);
 
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
@@ -23,9 +24,11 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
     m_compatWindow = std::make_unique<CompatWindow>(m_systemControl, this);
     m_keySequenceWindow = std::make_unique<KeySequenceWindow>(m_systemKey, this);
     m_QuickBatteryWindow = std::make_unique<QuickBatteryWindow>(m_systemBattery, this);
+    m_QuickBluetoothWindow = std::make_unique<QuickBluetoothWindow>(m_systemBluetooth, this);
 
     // Abrir/cerrar ventana emergente al hacer clic en el botón de batería
     connect(ui->btnBattery, &QPushButton::clicked, this, &MainWindow::onBatteryClicked);
+    connect(ui->btnBluetooth, &QPushButton::clicked, this, &MainWindow::onBluetoothClicked);
 
     // Timer de 1 segundo para ocultar QuickBatteryWindow cuando el cursor sale de ella
     m_batteryHideTimer = new QTimer(this);
@@ -37,14 +40,14 @@ MainWindow::MainWindow(std::shared_ptr<ISystemControl> systemControl, std::share
         });
 
     // Cancelar cuenta regresiva si el cursor entra a QuickBatteryWindow
-    connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseEnteredWindow, this, [this]() {
+    /*connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseEnteredWindow, this, [this]() {
         m_batteryHideTimer->stop();
-        });
+        });*/
 
     // Iniciar cuenta regresiva al salir el cursor de QuickBatteryWindow
-    connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseLeftWindow, this, [this]() {
+    /*connect(m_QuickBatteryWindow.get(), &QuickBatteryWindow::mouseLeftWindow, this, [this]() {
         m_batteryHideTimer->start(1000);
-        });
+        });*/
 
     // Timer de actualización de la batería
     m_batteryTimer = new QTimer(this);
@@ -59,6 +62,32 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+void MainWindow::onBluetoothClicked() {
+    if (!m_QuickBluetoothWindow) return;
+
+    if (m_QuickBluetoothWindow->isVisible()) {
+        m_QuickBluetoothWindow->hide();
+    }
+    else {
+        updateBluetoothWindowPosition();
+        m_QuickBluetoothWindow->show();
+        m_QuickBluetoothWindow->activateWindow();
+    }
+}
+
+void MainWindow::updateBluetoothWindowPosition() {
+    if (!m_QuickBluetoothWindow || !ui->btnBluetooth) return;
+
+    m_QuickBluetoothWindow->adjustSize();
+
+    QPoint globalBtnPos = ui->btnBluetooth->mapToGlobal(QPoint(0, 0));
+    int btnCenterX = globalBtnPos.x() + (ui->btnBluetooth->width() / 2);
+    int posX = btnCenterX - (m_QuickBluetoothWindow->width() / 2);
+    int posY = globalBtnPos.y() - m_QuickBluetoothWindow->height() - 8;
+
+    m_QuickBluetoothWindow->move(posX, posY);
+}
+
 void MainWindow::onBatteryClicked() {
     if (!m_QuickBatteryWindow) return;
 
@@ -68,8 +97,7 @@ void MainWindow::onBatteryClicked() {
     else {
         updateBatteryWindowPosition();
         m_QuickBatteryWindow->show();
-        // Tiempo inicial de tolerancia para deslizar el ratón hacia la ventana
-        m_batteryHideTimer->start(2000);
+        m_QuickBatteryWindow->activateWindow(); 
     }
 }
 

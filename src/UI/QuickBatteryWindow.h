@@ -3,6 +3,7 @@
 #include "Interfaz/ISystemBattery.h"
 #include <QWidget>
 #include <memory>
+#include <QEvent>
 
 class QTimer;
 
@@ -15,15 +16,10 @@ public:
     explicit QuickBatteryWindow(std::shared_ptr<ISystemBattery> battery, QWidget* parent = nullptr);
     ~QuickBatteryWindow() override;
 
-signals:
-    void mouseEnteredWindow();
-    void mouseLeftWindow();
-
 protected:
     void showEvent(QShowEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
-    void enterEvent(QEnterEvent* event) override;
-    void leaveEvent(QEvent* event) override;
+    void changeEvent(QEvent* event) override; // <-- Detecta la pérdida de foco/clic fuera
 
 private slots:
     void onPowerSaverClicked();

@@ -18,7 +18,7 @@ QuickBatteryWindow::QuickBatteryWindow(std::shared_ptr<ISystemBattery> battery, 
 {
     m_ui->setupUi(this);
 
-    // Ventana tipo Tool sin marco y siempre visible
+    // Ventana sin marco, encima de otras y tratada como Tool
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
 
@@ -36,14 +36,14 @@ QuickBatteryWindow::QuickBatteryWindow(std::shared_ptr<ISystemBattery> battery, 
 
 QuickBatteryWindow::~QuickBatteryWindow() = default;
 
-void QuickBatteryWindow::enterEvent(QEnterEvent* event) {
-    emit mouseEnteredWindow();
-    QWidget::enterEvent(event);
-}
-
-void QuickBatteryWindow::leaveEvent(QEvent* event) {
-    emit mouseLeftWindow();
-    QWidget::leaveEvent(event);
+void QuickBatteryWindow::changeEvent(QEvent* event) {
+    if (event->type() == QEvent::ActivationChange) {
+        // Si la ventana pierde el foco (clic fuera de ella), se oculta
+        if (!isActiveWindow()) {
+            hide();
+        }
+    }
+    QWidget::changeEvent(event);
 }
 
 void QuickBatteryWindow::showEvent(QShowEvent* event) {
@@ -154,7 +154,6 @@ void QuickBatteryWindow::applyBattery(const BatteryInfo& info) {
         m_ui->labelTimeValue->setText(tr("Calculando..."));
     }
 
-    // Consultar el perfil actual mediante m_battery->currentProfile()
     if (m_battery) {
         auto activeProfile = m_battery->currentProfile();
         if (activeProfile.has_value()) {

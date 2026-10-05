@@ -30,9 +30,13 @@ set(SOURCES
     src/UI/MainWindow.cpp
     src/UI/CompatWindow.cpp
     src/UI/KeySequenceWindow.cpp
+    src/UI/QuickBatteryWindow.cpp
+    src/UI/QuickBluetoothWindow.cpp
     ui/mainwindow.ui
     ui/compatwindow.ui
     ui/keysequencewindow.ui
+    ui/quickbatterywindow.ui
+    ui/quickbluetoothwindow.ui
 )
 
 set(HEADERS
@@ -42,27 +46,33 @@ set(HEADERS
     src/UI/MainWindow.h
     src/UI/CompatWindow.h
     src/UI/KeySequenceWindow.h
+    src/UI/QuickBatteryWindow.h
+    src/UI/QuickBluetoothWindow.h
 )
 
 if(WIN32)
-    list(APPEND SOURCES src/Utils&Widgets/SystemControl/WinSystemControl.cpp)
-    list(APPEND HEADERS src/Utils&Widgets/SystemControl/WinSystemControl.h)
-    list(APPEND HEADERS src/Utils&Widgets/SystemKey/WinSystemKey.h)
-    list(APPEND SOURCES src/Utils&Widgets/SystemKey/WinSystemKey.cpp)
-    list(APPEND HEADERS src/Utils&Widgets/SystemBattery/WinSystemBattery.h)
-    list(APPEND SOURCES src/Utils&Widgets/SystemBattery/WinSystemBattery.cpp)
+    list(APPEND SOURCES src/UtilsWidgets/SystemControl/WinSystemControl.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemControl/WinSystemControl.h)
+    list(APPEND HEADERS src/UtilsWidgets/SystemKey/WinSystemKey.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemKey/WinSystemKey.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemBattery/WinSystemBattery.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemBattery/WinSystemBattery.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemBluetooth/WinSystemBluetoothControl.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/WinSystemBluetoothControl.cpp)
     add_compile_definitions(
         _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         WIN32_LEAN_AND_MEAN
         NOMINMAX
     )
 else()
-    list(APPEND SOURCES src/Utils&Widgets/SystemControl/LinuxSystemControl.cpp)
-    list(APPEND HEADERS src/Utils&Widgets/SystemControl/LinuxSystemControl.h)
-    list(APPEND HEADERS src/Utils&Widgets/SystemKey/LinuxSystemKey.h)
-    list(APPEND SOURCES src/Utils&Widgets/SystemKey/LinuxSystemKey.cpp)
-    list(APPEND HEADERS src/Utils&Widgets/SystemBattery/LinuxSystemBattery.h)
-    list(APPEND SOURCES src/Utils&Widgets/SystemBattery/LinuxSystemBattery.cpp)
+    list(APPEND SOURCES src/UtilsWidgets/SystemControl/LinuxSystemControl.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemControl/LinuxSystemControl.h)
+    list(APPEND HEADERS src/UtilsWidgets/SystemKey/LinuxSystemKey.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemKey/LinuxSystemKey.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemBattery/LinuxSystemBattery.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemBattery/LinuxSystemBattery.cpp)
+    list(APPEND HEADERS src/UtilsWidgets/SystemBluetooth/LinuxSystemBluetoothControl.h)
+    list(APPEND SOURCES src/UtilsWidgets/SystemBluetooth/LinuxSystemBluetoothControl.cpp)
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -84,7 +94,8 @@ target_link_libraries(${PROJECT_NAME}
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE WindowsApp
     Setupapi
-      PowrProf)
+    PowrProf
+    Bthprops)
 
     # Obtener ruta binaria de Qt directamente desde Qt6::Core
     get_target_property(QT_CORE_LIB_PATH Qt6::Core LOCATION)

@@ -27,6 +27,37 @@
 					</spacer>
 				</item>
 				<item>
+					<!-- Botón de Bluetooth -->
+					<widget class="QPushButton" name="btnBluetooth">
+						<property name="text">
+							<string>ᛒ</string>
+						</property>
+						<property name="cursor">
+							<cursorShape>PointingHandCursor</cursorShape>
+						</property>
+						<property name="styleSheet">
+							<string notr="true">
+								QPushButton#btnBluetooth {
+								background-color: rgba(59, 130, 246, 0.15);
+								color: #18181b;
+								font-weight: bold;
+								font-size: 12px;
+								border: 2px solid #27272a;
+								border-radius: 4px;
+								padding: 1px 4px;
+								min-width: 28px;
+								max-width: 36px;
+								max-height: 18px;
+								}
+								QPushButton#btnBluetooth:hover {
+								background-color: rgba(59, 130, 246, 0.30);
+								border-color: #3b82f6;
+								}
+							</string>
+						</property>
+					</widget>
+				</item>
+				<item>
 					<!-- Contenedor del cuerpo de la batería y su polo positivo -->
 					<layout class="QHBoxLayout" name="layoutBatteryContainer">
 						<property name="spacing">

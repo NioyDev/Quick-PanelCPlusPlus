@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>QuickBluetoothWindow</class>
+ <widget class="QWidget" name="QuickBluetoothWindow">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>450</width><height>270</height></rect>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#QuickBluetoothWindow { background: transparent; }
+#bluetoothBox {
+    background-color: #18181b;
+    border-radius: 20px;
+    border: 1px solid #27272a;
+}
+#bluetoothBox QLabel { color: #fafafa; background: transparent; }
+#titleLabel { font-size: 14px; font-weight: bold; }
+#scrollArea, #scrollAreaWidgetContents { background: transparent; border: none; }
+QScrollBar:vertical { background: transparent; width: 6px; }
+QScrollBar::handle:vertical { background: #3f3f46; border-radius: 3px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+#settingsButton {
+    background-color: transparent;
+    color: #fafafa;
+    border: none;
+    border-radius: 12px;
+    padding: 4px;
+}
+#settingsButton:hover { background-color: #27272a; }
+#powerSwitch { spacing: 0; }
+#powerSwitch::indicator { width: 40px; height: 22px; border-radius: 11px; background-color: #3f3f46; }
+#powerSwitch::indicator:checked { background-color: #22c55e; }
+#deviceActionButton {
+    background-color: #3f3f46;
+    color: #fafafa;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    padding: 4px 10px;
+}
+#deviceActionButton:hover { background-color: #52525b; }
+#deviceActionButton:disabled { color: #a1a1aa; }
+   </string>
+  </property>
+  <layout class="QVBoxLayout" name="rootLayout">
+   <property name="spacing"><number>0</number></property>
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <item>
+    <widget class="QFrame" name="bluetoothBox">
+     <property name="minimumSize">
+      <size><width>450</width><height>270</height></size>
+     </property>
+     <layout class="QVBoxLayout" name="boxLayout">
+      <property name="spacing"><number>16</number></property>
+      <property name="leftMargin"><number>16</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>16</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="headerLayout">
+        <property name="spacing"><number>8</number></property>
+        <item>
+         <widget class="QLabel" name="iconLabel">
+          <property name="minimumSize"><size><width>24</width><height>24</height></size></property>
+          <property name="maximumSize"><size><width>24</width><height>24</height></size></property>
+          <property name="text"><string/></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="titleLabel">
+          <property name="text"><string>Bluetooth</string></property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="headerSpacer">
+          <property name="orientation"><enum>Qt::Horizontal</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="powerSwitch">
+          <property name="text"><string/></property>
+          <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="settingsButton">
+          <property name="text"><string/></property>
+          <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QScrollArea" name="scrollArea">
+        <property name="minimumSize"><size><width>0</width><height>150</height></size></property>
+        <property name="maximumSize"><size><width>16777215</width><height>400</height></size></property>
+        <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+        <property name="horizontalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
+        <property name="widgetResizable"><bool>true</bool></property>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <layout class="QVBoxLayout" name="deviceListLayout">
+          <property name="spacing"><number>4</number></property>
+          <property name="leftMargin"><number>0</number></property>
+          <property name="topMargin"><number>0</number></property>
+          <property name="rightMargin"><number>0</number></property>
+          <property name="bottomMargin"><number>0</number></property>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
