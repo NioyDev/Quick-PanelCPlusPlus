@@ -81,7 +81,7 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
          </spacer>
         </item>
         <item>
-         <widget class="QCheckBox" name="powerSwitch">
+		<widget class="ToggleSwitch" name="powerSwitch">
           <property name="text"><string/></property>
           <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
          </widget>
@@ -117,6 +117,13 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
    </item>
   </layout>
  </widget>
+	<customwidgets>
+		<customwidget>
+			<class>ToggleSwitch</class>
+			<extends>QAbstractButton</extends>
+			<header>ToggleSwitch.h</header>
+		</customwidget>
+	</customwidgets>
  <resources/>
  <connections/>
 </ui>

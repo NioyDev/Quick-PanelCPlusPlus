@@ -77,7 +77,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
     ${SOURCES}
-    ${HEADERS})
+    ${HEADERS} "src/UI/ToggleSwitch.h" "src/UI/ToggleSwitch.cpp")
  #"src/Interfaz/ISystemBattery.h"  "src/utils/SystemBattery/LinuxSystemBattery.h" "src/utils/LinuxSystemBattery.cpp" "src/utils/WinSystemBattery.h" "src/utils/WinSystemBattery.cpp" "src/Factorys/SystemBatteryFactory.h" "src/Factorys/SystemBatteryFactory.cpp" "src/UI/QuickBatteryWindow.h" "src/UI/QuickBatteryWindow.cpp")
 
 target_include_directories(${PROJECT_NAME} PRIVATE 

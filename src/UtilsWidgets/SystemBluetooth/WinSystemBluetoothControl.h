@@ -11,4 +11,5 @@ public:
     bool connectDevice(const QString& mac) override;
     bool disconnectDevice(const QString& mac) override;
     bool openBluetoothSettings() override;
+    bool restartAdapter() override;
 };

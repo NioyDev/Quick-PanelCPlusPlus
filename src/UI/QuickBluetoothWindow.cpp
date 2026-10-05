@@ -2,6 +2,7 @@
 #include "ui_quickbluetoothwindow.h"
 
 #include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QIcon>
@@ -12,36 +13,44 @@
 #include <QPushButton>
 #include <QRunnable>
 #include <QScreen>
+#include <QThread>
 #include <QThreadPool>
 #include <QTimer>
 
-bool waitForConnectionState(const std::shared_ptr<ISystemBluetoothControl>& control,
-    const QString& mac, bool desiredConnected,
-    int timeoutMs, int pollMs = 250) {
-    QElapsedTimer timer;
-    timer.start();
-    do {
-        const auto devices = control->knownDevices();
-        for (const auto& dev : devices) {
-            if (dev.mac.compare(mac, Qt::CaseInsensitive) == 0) {
-                if (dev.connected == desiredConnected)
-                    return true;
-                break;
-            }
-        }
-        QThread::msleep(pollMs);
-    } while (timer.elapsed() < timeoutMs);
-    return false;
-}
+namespace {
 
-void QuickBluetoothWindow::onDeviceActionFinished(const QString& mac, bool connectAction, ActionResult result) {
-    m_pendingMacs.remove(mac);
-    if (result == ActionResult::Failed) {
-        m_rowMessages.insert(mac, connectAction ? tr("No se pudo conectar")
-            : tr("No se pudo desconectar"));
+    // Bloquea (solo llamar desde un hilo de trabajo) hasta que el SO refleje el estado deseado.
+    bool waitForConnectionState(const std::shared_ptr<ISystemBluetoothControl>& control,
+        const QString& mac, bool desiredConnected,
+        int timeoutMs, int pollMs = 250) {
+        QElapsedTimer timer;
+        timer.start();
+        do {
+            const auto devices = control->knownDevices();
+            for (const auto& dev : devices) {
+                if (dev.mac.compare(mac, Qt::CaseInsensitive) == 0) {
+                    if (dev.connected == desiredConnected)
+                        return true;
+                    break;
+                }
+            }
+            QThread::msleep(pollMs);
+        } while (timer.elapsed() < timeoutMs);
+        return false;
     }
-    refreshAsync();
-}
+
+    bool sameSnapshot(bool powerA, const QList<BluetoothDeviceInfo>& a,
+        bool powerB, const QList<BluetoothDeviceInfo>& b) {
+        if (powerA != powerB || a.size() != b.size())
+            return false;
+        for (int i = 0; i < a.size(); ++i) {
+            if (a[i].mac != b[i].mac || a[i].name != b[i].name || a[i].connected != b[i].connected)
+                return false;
+        }
+        return true;
+    }
+
+} // namespace
 
 QuickBluetoothWindow::QuickBluetoothWindow(std::shared_ptr<ISystemBluetoothControl> control, QWidget* parent)
     : QWidget(parent)
@@ -51,6 +60,12 @@ QuickBluetoothWindow::QuickBluetoothWindow(std::shared_ptr<ISystemBluetoothContr
     setAttribute(Qt::WA_TranslucentBackground);
 
     ui->setupUi(this);
+
+    m_restartButton = new QPushButton(tr("Reiniciar adaptador Bluetooth"), ui->bluetoothBox);
+    m_restartButton->setObjectName("deviceActionButton");   // reutiliza tu estilo
+    m_restartButton->setCursor(Qt::PointingHandCursor);
+    ui->boxLayout->addWidget(m_restartButton);
+    connect(m_restartButton, &QPushButton::clicked, this, &QuickBluetoothWindow::onRestartAdapterClicked);
 
     const QIcon btIcon = QIcon::fromTheme("bluetooth-active-symbolic");
     if (btIcon.isNull())
@@ -64,10 +79,18 @@ QuickBluetoothWindow::QuickBluetoothWindow(std::shared_ptr<ISystemBluetoothContr
     else
         ui->settingsButton->setIcon(settingsIcon);
 
-    connect(ui->powerSwitch, &QCheckBox::toggled, this, &QuickBluetoothWindow::onPowerToggled);
+    connect(ui->powerSwitch, &QAbstractButton::toggled, this, &QuickBluetoothWindow::onPowerToggled);
     connect(ui->settingsButton, &QToolButton::clicked, this, &QuickBluetoothWindow::onSettingsClicked);
 
-    refreshAsync();
+    // Sondeo ligero: solo corre mientras la ventana está visible (ver showEvent/hideEvent)
+    m_pollTimer = new QTimer(this);
+    m_pollTimer->setInterval(2000);
+    connect(m_pollTimer, &QTimer::timeout, this, [this]() {
+        if (!m_powerChangePending)
+            refreshAsync(false);
+        });
+
+    // El primer refresco lo hace showEvent()
 }
 
 QuickBluetoothWindow::~QuickBluetoothWindow() {
@@ -97,22 +120,61 @@ void QuickBluetoothWindow::closeEvent(QCloseEvent* event) {
     //QCoreApplication::quit();
 }
 
-void QuickBluetoothWindow::refreshAsync() {
+void QuickBluetoothWindow::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    m_rowMessages.clear();
+    refreshAsync(true);     // estado fresco cada vez que la ventana aparece
+    m_pollTimer->start();
+}
+
+void QuickBluetoothWindow::hideEvent(QHideEvent* event) {
+    m_pollTimer->stop();
+    QWidget::hideEvent(event);
+}
+
+void QuickBluetoothWindow::refreshAsync(bool force) {
+    if (m_refreshInFlight) {            // ya hay uno en curso: encolar otro al terminar
+        m_refreshQueued = true;
+        m_queuedForce = m_queuedForce || force;
+        return;
+    }
+    m_refreshInFlight = true;
+
     QPointer<QuickBluetoothWindow> self(this);
     auto control = m_control;
 
-    QThreadPool::globalInstance()->start(QRunnable::create([self, control]() {
+    QThreadPool::globalInstance()->start(QRunnable::create([self, control, force]() {
         Snapshot snapshot;
         snapshot.powered = control->isPowered();
         snapshot.devices = control->knownDevices();
 
         if (!self)
             return;
-        QMetaObject::invokeMethod(self.data(), [self, snapshot]() {
+        QMetaObject::invokeMethod(self.data(), [self, snapshot, force]() {
             if (self)
-                self->applySnapshot(snapshot);
+                self->onSnapshotReady(snapshot, force);
             }, Qt::QueuedConnection);
         }));
+}
+
+void QuickBluetoothWindow::onSnapshotReady(const Snapshot& snapshot, bool force) {
+    m_refreshInFlight = false;
+
+    // Solo reconstruimos la UI si algo cambió (evita parpadeos con el sondeo)
+    if (force || !m_hasSnapshot ||
+        !sameSnapshot(snapshot.powered, snapshot.devices,
+            m_lastSnapshot.powered, m_lastSnapshot.devices)) {
+        m_lastSnapshot = snapshot;
+        m_hasSnapshot = true;
+        applySnapshot(snapshot);
+    }
+
+    if (m_refreshQueued) {
+        const bool queuedForce = m_queuedForce;
+        m_refreshQueued = false;
+        m_queuedForce = false;
+        refreshAsync(queuedForce);
+    }
 }
 
 void QuickBluetoothWindow::applySnapshot(const Snapshot& snapshot) {
@@ -144,12 +206,18 @@ void QuickBluetoothWindow::addDeviceRow(const BluetoothDeviceInfo& device) {
     label->setTextFormat(Qt::RichText);
     const QString safeName = device.name.toHtmlEscaped();
     QString text = device.connected ? QString("<b>%1</b> (Conectado)").arg(safeName) : safeName;
-    if (m_rowMessages.contains(device.mac))
-        text += QString(" <span style='color:#d9534f'>– %1</span>").arg(m_rowMessages.value(device.mac).toHtmlEscaped());
+    if (m_rowMessages.contains(device.mac)) {
+        text += QString(" <span style='color:#d9534f'>– %1</span>")
+            .arg(m_rowMessages.value(device.mac).toHtmlEscaped());
+    }
     label->setText(text);
 
+    // Si hay una acción en curso para este dispositivo, el botón se mantiene deshabilitado
     const bool pending = m_pendingMacs.contains(device.mac);
-    auto* button = new QPushButton(pending ? tr("...") : (device.connected ? tr("Desconectar") : tr("Conectar")), row);
+    auto* button = new QPushButton(
+        pending ? tr("...") : (device.connected ? tr("Desconectar") : tr("Conectar")), row);
+    button->setObjectName("deviceActionButton");
+    button->setCursor(Qt::PointingHandCursor);
     button->setEnabled(!pending);
 
     const QString mac = device.mac;
@@ -162,8 +230,6 @@ void QuickBluetoothWindow::addDeviceRow(const BluetoothDeviceInfo& device) {
     rowLayout->addWidget(button, 0);
     ui->deviceListLayout->addWidget(row);
 }
-
-#include <QThread>
 
 void QuickBluetoothWindow::runDeviceAction(QPushButton* button, const QString& mac, bool connectAction) {
     if (m_pendingMacs.contains(mac))
@@ -197,21 +263,65 @@ void QuickBluetoothWindow::runDeviceAction(QPushButton* button, const QString& m
         }));
 }
 
+void QuickBluetoothWindow::onDeviceActionFinished(const QString& mac, bool connectAction, ActionResult result) {
+    m_pendingMacs.remove(mac);
+    if (result == ActionResult::Failed) {
+        m_rowMessages.insert(mac, connectAction ? tr("No se pudo conectar")
+            : tr("No se pudo desconectar"));
+    }
+    refreshAsync(true);   // force: para que se vea el mensaje aunque el estado no cambie
+}
+
 void QuickBluetoothWindow::onPowerToggled(bool enabled) {
     if (m_ignorePowerSignal)
         return;
 
+    m_powerChangePending = true;   // evita que el sondeo revierta el switch con un estado viejo
+
     QPointer<QuickBluetoothWindow> self(this);
     auto control = m_control;
 
-    QThreadPool::globalInstance()->start(QRunnable::create([control, enabled]() {
+    QThreadPool::globalInstance()->start(QRunnable::create([self, control, enabled]() {
         control->setPowered(enabled);
-        }));
+        QThread::msleep(300);   // pequeño margen para que el SO refleje el estado
 
-    QTimer::singleShot(1000, this, [this]() { refreshAsync(); });
+        if (!self)
+            return;
+        QMetaObject::invokeMethod(self.data(), [self]() {
+            if (!self)
+                return;
+            self->m_powerChangePending = false;
+            self->refreshAsync(true);
+            }, Qt::QueuedConnection);
+        }));
 }
 
 void QuickBluetoothWindow::onSettingsClicked() {
     m_control->openBluetoothSettings();
     close();
+}
+
+void QuickBluetoothWindow::onRestartAdapterClicked() {
+    m_restartButton->setEnabled(false);
+    m_restartButton->setText(tr("Reiniciando..."));
+    m_powerChangePending = true;     // pausa el sondeo mientras el adaptador no está
+
+    QPointer<QuickBluetoothWindow> self(this);
+    auto control = m_control;
+
+    QThreadPool::globalInstance()->start(QRunnable::create([self, control]() {
+        control->restartAdapter();
+        QThread::msleep(2000);       // dejar que el adaptador se reinicialice
+
+        if (!self)
+            return;
+        QMetaObject::invokeMethod(self.data(), [self]() {
+            if (!self)
+                return;
+            self->m_powerChangePending = false;
+            self->m_restartButton->setEnabled(true);
+            self->m_restartButton->setText(self->tr("Reiniciar adaptador Bluetooth"));
+            self->refreshAsync(true);
+            }, Qt::QueuedConnection);
+        }));
 }

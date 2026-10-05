@@ -19,4 +19,5 @@ public:
     virtual bool connectDevice(const QString& mac) = 0;
     virtual bool disconnectDevice(const QString& mac) = 0;
     virtual bool openBluetoothSettings() = 0;
+    virtual bool restartAdapter() = 0;
 };
